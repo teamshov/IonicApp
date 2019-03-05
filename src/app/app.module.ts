@@ -9,17 +9,22 @@ import { StatusBar } from '@ionic-native/status-bar/ngx';
 import { AppComponent } from './app.component';
 import { AppRoutingModule } from './app-routing.module';
 
+import { BluetoothLE } from '@ionic-native/bluetooth-le/ngx';
+import { KonvaModule } from 'ng2-konva';
+
 @NgModule({
   declarations: [AppComponent],
   entryComponents: [],
   imports: [
     BrowserModule,
     IonicModule.forRoot(),
-    AppRoutingModule
+    AppRoutingModule,
+    KonvaModule
   ],
   providers: [
     StatusBar,
     SplashScreen,
+    BluetoothLE,
     { provide: RouteReuseStrategy, useClass: IonicRouteStrategy }
   ],
   bootstrap: [AppComponent]

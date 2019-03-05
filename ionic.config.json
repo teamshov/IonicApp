@@ -1,5 +1,7 @@
 {
   "name": "vikApp",
-  "integrations": {},
+  "integrations": {
+    "cordova": {}
+  },
   "type": "angular"
 }

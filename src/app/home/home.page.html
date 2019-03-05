@@ -10,16 +10,14 @@
 </ion-header>
 
 <ion-content>
-    <ion-card class="welcome-card">
-      <ion-img src="/assets/shapes.svg"></ion-img>
-      <ion-card-header>
-        <ion-card-subtitle>Get Started</ion-card-subtitle>
-        <ion-card-title>Welcome to Ionic</ion-card-title>
-      </ion-card-header>
-      <ion-card-content>
-        <p>Now that your app has been created, you'll want to start building out features and components. Check out some of the resources below for next steps.</p>
-      </ion-card-content>
+    <ion-card>
+      <red-circle (click)="handleClick()"></red-circle>
     </ion-card>
+
+    <ion-card>
+      <floorplan></floorplan>
+    </ion-card>
+
     <ion-list lines="none">
       <ion-list-header>
         <ion-label>Resources</ion-label>
@@ -41,4 +39,7 @@
         <ion-label>Theme Your App</ion-label>
       </ion-item>
     </ion-list>
+    <ion-item>
+      <ion-button (click)="bleScan()">Start Scan</ion-button>
+    </ion-item>
 </ion-content>
