@@ -1,4 +1,6 @@
 import { Component, OnInit } from '@angular/core';
+import { ShovService } from '../shov.service';
+import { Beacon } from '../BeaconClass';
 
 @Component({
   selector: 'app-list',
@@ -7,33 +9,25 @@ import { Component, OnInit } from '@angular/core';
 })
 export class ListPage implements OnInit {
   private selectedItem: any;
-  private icons = [
-    'flask',
-    'wifi',
-    'beer',
-    'football',
-    'basketball',
-    'paper-plane',
-    'american-football',
-    'boat',
-    'bluetooth',
-    'build'
-  ];
+  // private ShovBeacons: Array<Beacon> = [];
   public items: Array<{ title: string; note: string; icon: string }> = [];
-  constructor() {
-    for (let i = 1; i < 11; i++) {
+
+  constructor(private shovService: ShovService) {
+    var ShovBeacons = shovService.getBeacons();
+    console.log(ShovBeacons);
+    for (let i = 0; i < ShovBeacons.length; i++) {
+      console.log(ShovBeacons[i].getID());
       this.items.push({
-        title: 'Item ' + i,
-        note: 'This is item #' + i,
-        icon: this.icons[Math.floor(Math.random() * this.icons.length)]
+        title: 'ID: ' + ShovBeacons[i].getID(),
+        note: 'This has rssi: ' + ShovBeacons[i].rssi,
+        icon: 'bluetooth'
       });
     }
   }
+  
 
   ngOnInit() {
+    this.shovService.bleScan();
   }
-  // add back when alpha.4 is out
-  // navigate(item) {
-  //   this.router.navigate(['/list', JSON.stringify(item)]);
-  // }
+
 }

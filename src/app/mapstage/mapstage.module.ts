@@ -1,22 +1,22 @@
 import { NgModule } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
-import { FloorPlan } from './floor-plan.component';
+import { MapStage } from './mapstage.component';
 import { KonvaModule } from 'ng2-konva';
 
 
 @NgModule({
     declarations: [
-        FloorPlan,
+        MapStage,
     ],
     imports: [
         IonicModule,
         KonvaModule,
     ],
     exports: [
-        FloorPlan,
+        MapStage,
     ],
     entryComponents: [
-        FloorPlan,
+        MapStage,
     ],
 })
-export class FloorPlanModule {}
+export class MapStageModule {}

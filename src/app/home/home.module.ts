@@ -3,30 +3,31 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, Platform } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
-import { HomePage } from './home.page';
+import { Home } from './home.page';
 
 import { BluetoothLE } from '@ionic-native/bluetooth-le/ngx';
-import { RedCircleModule } from '../red-circle/red-circle.module';
-import { FloorPlanModule } from '../floor-plan/floor-plan.module';
+import { MapStageModule } from '../mapstage/mapstage.module';
+import { MapStage } from '../mapstage/mapstage.component';
+
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    RedCircleModule,
-    FloorPlanModule,
+    MapStageModule,
     RouterModule.forChild([
       {
         path: '',
-        component: HomePage
+        component: Home
       }
     ])
   ],
   providers: [
-    BluetoothLE
+    BluetoothLE,
+    MapStage
   ],
-  declarations: [HomePage]
+  declarations: [Home]
 })
 export class HomePageModule {
   
