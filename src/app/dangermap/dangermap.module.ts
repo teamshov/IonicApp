@@ -6,6 +6,9 @@ import { Routes, RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 
 import { DangermapPage } from './dangermap.page';
+import { BluetoothLE } from '@ionic-native/bluetooth-le/ngx';
+import { MapStage } from '../mapstage/mapstage.directive';
+import { MapStageModule } from '../mapstage/mapstage.module';
 
 const routes: Routes = [
   {
@@ -19,7 +22,11 @@ const routes: Routes = [
     CommonModule,
     FormsModule,
     IonicModule,
+    MapStageModule,
     RouterModule.forChild(routes)
+  ],
+  providers: [
+    BluetoothLE,
   ],
   declarations: [DangermapPage]
 })

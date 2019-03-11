@@ -1,18 +1,17 @@
-import { Injectable } from '@angular/core';
+import { EventEmitter, Injectable } from '@angular/core';
 import { Platform } from '@ionic/angular';
 import { BluetoothLE } from '@ionic-native/bluetooth-le/ngx';
 import { HTTP } from '@ionic-native/http/ngx';
 import { Beacon } from './BeaconClass';
-
-var ShovBeacons: Array<Beacon> = [];
-
+const maxDelay = 5000;
 
 @Injectable({
   providedIn: 'root',
 
 })
 export class ShovService {
-  
+  beacons : { [key:string]:Beacon;} = {};
+  updateBeaconEvent : EventEmitter<boolean> = new EventEmitter();
   constructor(
     public ble: BluetoothLE, 
     public plt: Platform, 
@@ -25,17 +24,29 @@ export class ShovService {
       console.log(ble);
       ble.initialize();
       ble.requestPermission();
-
+      this.bleScan();
     });
-    this.http.get('http://omaraa.ddns.net:62027/allbeacons', {}, {})
+    this.http.get('http://omaraa.ddns.net:62027/db/all/beacons', {}, {})
   .then(data => {
-
-    var beacondata = (JSON.parse(data.data))['beacons']; // data received by server
-    for (var i = 0; i < beacondata.length; i++){
-      var b = new Beacon(beacondata[i]);
-      ShovBeacons.push(b);
+    console.log(data);
+    let beaconIDs = (JSON.parse(data.data)); // data received by server
+    console.log(beaconIDs);
+    for (let i = 0; i < beaconIDs.length; i++){
+      let b = new Beacon(beaconIDs[i]);
+      this.beacons[beaconIDs[i]] = b;
+      this.http.get(('http://omaraa.ddns.net:62027/db/beacons/' + beaconIDs[i]), {}, {}).then(
+        bdata => {
+          let parsedData = JSON.parse(bdata.data);
+          let offset = parsedData['offset'];
+          let xpos = parsedData['xpos'];
+          let ypos = parsedData['ypos'];
+          let piD = parsedData['distance'];
+          console.log(parsedData);
+          b.DBinfo(-50, xpos, ypos, 'Blue', piD);
+        }
+      );
     }    
-    console.log(ShovBeacons);
+    console.log(this.beacons);
   })
   .catch(error => {
 
@@ -44,6 +55,7 @@ export class ShovService {
     console.log(error.headers);
 
   });
+  
   }
 
   private asHexString(i) {
@@ -115,7 +127,6 @@ export class ShovService {
     let id = '';
 
     new Uint8Array(devdata["16"]).slice(3, 11).forEach(e => id += this.asHexString(e));
-    
     this.updateBeacon(id, data['rssi']);
   }
 
@@ -125,16 +136,22 @@ export class ShovService {
 
   }
 
-  updateBeacon(recv_id, rssi){
-    for (var i = 0; i < ShovBeacons.length; i++){
-      if (ShovBeacons[i].getID() == recv_id){
-        ShovBeacons[i].updateRSSI(rssi);
-        console.log("Beacon: " + recv_id + " updated");
-      }
+  updateBeacon(id, rssi){
+    if (id in this.beacons) {
+      this.beacons[id].updateRSSI(rssi);
+      this.updateBeaconEvent.next();
     }
   }
 
-  getBeacons(){
-     return ShovBeacons;
+  getBeacons() {
+     return Object.values(this.beacons);
+  }
+
+  getAvailableBeacons() {
+    return Object.values(this.beacons).filter(this.isBeaconValid);
+  }
+
+  isBeaconValid(beacon) {
+    return  (Date.now() - beacon.getTimestamp()) > maxDelay;
   }
 }

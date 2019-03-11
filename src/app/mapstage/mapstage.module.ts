@@ -1,8 +1,6 @@
 import { NgModule } from '@angular/core';
 import { IonicModule } from '@ionic/angular';
-import { MapStage } from './mapstage.component';
-import { KonvaModule } from 'ng2-konva';
-
+import { MapStage } from './mapstage.directive';
 
 @NgModule({
     declarations: [
@@ -10,13 +8,11 @@ import { KonvaModule } from 'ng2-konva';
     ],
     imports: [
         IonicModule,
-        KonvaModule,
     ],
     exports: [
         MapStage,
     ],
-    entryComponents: [
-        MapStage,
-    ],
 })
-export class MapStageModule {}
+export class MapStageModule {
+
+}

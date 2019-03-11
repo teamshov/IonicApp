@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, NgZone } from '@angular/core';
 import { ShovService } from '../shov.service';
 import { Beacon } from '../BeaconClass';
 
@@ -8,26 +8,29 @@ import { Beacon } from '../BeaconClass';
   styleUrls: ['list.page.scss']
 })
 export class ListPage implements OnInit {
+  
   private selectedItem: any;
   // private ShovBeacons: Array<Beacon> = [];
-  public items: Array<{ title: string; note: string; icon: string }> = [];
+  public beacons: Array<Beacon> = [];
+  // private updated = true;
 
-  constructor(private shovService: ShovService) {
-    var ShovBeacons = shovService.getBeacons();
-    console.log(ShovBeacons);
-    for (let i = 0; i < ShovBeacons.length; i++) {
-      console.log(ShovBeacons[i].getID());
-      this.items.push({
-        title: 'ID: ' + ShovBeacons[i].getID(),
-        note: 'This has rssi: ' + ShovBeacons[i].rssi,
-        icon: 'bluetooth'
-      });
-    }
+  constructor(private shovService: ShovService, private zone: NgZone) {
+
+    let ShovBeacons = this.shovService.getBeacons();
+      console.log(ShovBeacons);
+      for (let i = 0; i < ShovBeacons.length; i++) {
+        console.log(ShovBeacons[i].getID());
+        this.beacons.push(ShovBeacons[i]);
+      }
+    
+      this.shovService.updateBeaconEvent.subscribe(() => this.zone.run(() => {}));
   }
+
   
 
   ngOnInit() {
     this.shovService.bleScan();
   }
+
 
 }

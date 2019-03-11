@@ -6,8 +6,8 @@ import { RouterModule } from '@angular/router';
 import { Home } from './home.page';
 
 import { BluetoothLE } from '@ionic-native/bluetooth-le/ngx';
+import { MapStage } from '../mapstage/mapstage.directive';
 import { MapStageModule } from '../mapstage/mapstage.module';
-import { MapStage } from '../mapstage/mapstage.component';
 
 
 @NgModule({
@@ -24,8 +24,7 @@ import { MapStage } from '../mapstage/mapstage.component';
     ])
   ],
   providers: [
-    BluetoothLE,
-    MapStage
+    BluetoothLE
   ],
   declarations: [Home]
 })
