@@ -24,6 +24,11 @@ export class AppComponent {
       title: 'Danger Map',
       url: '/dangermap',
       icon: 'flame'
+    },
+    {
+      title: 'PaperDraw',
+      url: '/paper',
+      icon: 'brush'
     }
   ];
 

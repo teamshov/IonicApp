@@ -42,7 +42,7 @@ export class ShovService {
           let ypos = parsedData['ypos'];
           let piD = parsedData['distance'];
           console.log(parsedData);
-          b.DBinfo(-50, xpos, ypos, 'Blue', piD);
+          b.DBinfo(offset, xpos, ypos, 'Blue', piD);
         }
       );
     }    

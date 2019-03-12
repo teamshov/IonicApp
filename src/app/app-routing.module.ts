@@ -18,6 +18,10 @@ const routes: Routes = [
   { 
     path: 'dangermap', 
     loadChildren: './dangermap/dangermap.module#DangermapPageModule' 
+  },
+  { 
+    path: 'paper', 
+    loadChildren: './paper/paper.module#PaperPageModule' 
   }
 ];
 
