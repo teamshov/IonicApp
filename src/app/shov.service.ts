@@ -17,6 +17,7 @@ export class ShovService {
     public plt: Platform, 
     private http:HTTP,
     ) {
+
     this.plt.ready().then((readySource) => {
 
       console.log('Platform ready from', readySource);
@@ -24,6 +25,7 @@ export class ShovService {
       console.log(ble);
       ble.initialize();
       ble.requestPermission();
+      ble.requestLocation();
       this.bleScan();
     });
     this.http.get('http://omaraa.ddns.net:62027/db/all/beacons', {}, {})
