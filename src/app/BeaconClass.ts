@@ -13,6 +13,8 @@ export class Beacon {
     timestamp: number;
     distance: number;
     piDistance: number;
+    static_dist: number;
+    alt_dist: number;
 
     constructor(id: string){
         this.id = id;
@@ -41,8 +43,24 @@ export class Beacon {
           } else {
             this.filteredRSSI = this.recvRSSI;
           }
-        this.distance =  this.piDistance * Math.pow(10, (this.offset-this.filteredRSSI)/25);
-        // console.log('ID: ' + this.id + ' distance: ' + this.distance);
+        this.distance =  parseFloat((Math.pow(10, (this.offset-this.filteredRSSI)/20)).toFixed(2));
+        this.static_dist =  parseFloat((Math.pow(10, (-65-this.filteredRSSI)/20)).toFixed(2));
+        this.alt_dist = this.calcDist(this.offset, this.filteredRSSI);
+    }
+
+    calcDist(txPower, rssi) {
+        if (rssi == 0) {
+            return -1.0; // if we cannot determine distance, return -1.
+        }
+
+        let ratio = rssi*1.0/txPower;
+        if (ratio < 1.0) {
+            return Math.pow(ratio,10);
+        }
+        else {
+            let accuracy =  (0.89976)*Math.pow(ratio,7.7095) + 0.111;
+            return accuracy;
+        }
     }
 
     public getTimestamp(){
@@ -58,6 +76,6 @@ export class Beacon {
     }
 
     public getDistance(){
-        return this.distance;
+        return this.static_dist;
     }
 }

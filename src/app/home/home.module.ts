@@ -8,7 +8,7 @@ import { Home } from './home.page';
 import { BluetoothLE } from '@ionic-native/bluetooth-le/ngx';
 import { MapStage } from '../mapstage/mapstage.directive';
 import { MapStageModule } from '../mapstage/mapstage.module';
-
+import { PinchZoomModule } from 'ngx-pinch-zoom';
 
 @NgModule({
   imports: [
@@ -16,6 +16,7 @@ import { MapStageModule } from '../mapstage/mapstage.module';
     FormsModule,
     IonicModule,
     MapStageModule,
+    PinchZoomModule,
     RouterModule.forChild([
       {
         path: '',

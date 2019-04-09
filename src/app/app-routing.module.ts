@@ -15,14 +15,15 @@ const routes: Routes = [
     path: 'list',
     loadChildren: './list/list.module#ListPageModule'
   },
-  { 
-    path: 'dangermap', 
-    loadChildren: './dangermap/dangermap.module#DangermapPageModule' 
+  {
+    path: 'static-o-distances', 
+    loadChildren: './static-o-distances/static-o-distances.module#StaticODistancesPageModule' 
   },
   { 
-    path: 'paper', 
-    loadChildren: './paper/paper.module#PaperPageModule' 
-  }
+    path: 'pi-o-distances', 
+    loadChildren: './pi-o-distances/pi-o-distances.module#PiODistancesPageModule' 
+  },
+  { path: 'alternate-distances', loadChildren: './alternate-distances/alternate-distances.module#AlternateDistancesPageModule' }
 ];
 
 @NgModule({

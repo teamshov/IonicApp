@@ -21,14 +21,19 @@ export class AppComponent {
       icon: 'list'
     },
     {
-      title: 'Danger Map',
-      url: '/dangermap',
-      icon: 'flame'
+      title: 'Static O Distances',
+      url: '/static-o-distances',
+      icon: 'walk'
     },
     {
-      title: 'PaperDraw',
-      url: '/paper',
-      icon: 'brush'
+      title: 'Pi O Distances',
+      url: '/pi-o-distances',
+      icon: 'walk'
+    },
+    {
+      title: 'Alternate Distances',
+      url: '/alternate-distances',
+      icon: 'walk'
     }
   ];
 

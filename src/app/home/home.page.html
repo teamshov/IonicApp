@@ -1,25 +1,27 @@
 <ion-header>
-  <ion-toolbar>
+  <ion-toolbar color="tertiary">
     <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
+      <ion-menu-button color="secondary"></ion-menu-button>
     </ion-buttons>
-    <ion-title>
-      Location Map
+    <ion-title color="light">
+      Indoor Map
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content>
-    <ion-card>
-      <div mapstage></div>
+    <ion-card color="medium">
+      <pinch-zoom>
+          <div mapstage></div>
+      </pinch-zoom>
     </ion-card>
 
 </ion-content>
 
 <ion-footer>
   <ion-toolbar>
-    <ion-button (click)="shovService.bleScan()">Start Scan</ion-button>
-    <ion-button (click)="shovService.stopScan()" color="danger">Stop Scan</ion-button>
+    <ion-button shape="round" fill="outline" (click)="shovService.bleScan()">Start Scan</ion-button>
+    <ion-button shape="round" fill="outline" (click)="shovService.stopScan()" color="danger">Stop Scan</ion-button>
   </ion-toolbar>
 </ion-footer>
     

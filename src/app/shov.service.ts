@@ -25,7 +25,12 @@ export class ShovService {
       console.log(ble);
       ble.initialize();
       ble.requestPermission();
-      ble.requestLocation();
+      ble.isLocationEnabled().then(status => {
+        if (!status) ble.requestLocation(); 
+      },
+      error => {
+        console.log(error);
+      });
       this.bleScan();
     });
     this.http.get('http://omaraa.ddns.net:62027/db/all/beacons', {}, {})
