@@ -1,22 +1,68 @@
 import { Directive, ElementRef, Renderer2, OnDestroy, Input } from '@angular/core';
 import Konva from 'konva';
 import { DeviceOrientation, DeviceOrientationCompassHeading } from '@ionic-native/device-orientation/ngx';
-import { KonvaComponent } from 'ng2-konva';
 import { ShovService } from '../shov.service';
 
+//Grid size parameters 
+const gridX = 40;
+const gridY = 36;
+
+//Compass heading parameters 
+const alphaComp = 0.5; //To smoothen compass readings 
+const alphaLoc = 0.2;
+const mapCompassOffset = 40; //Basic offset of the given map 
+
+//Links
+const pathURL = 'http://omaraa.ddns.net:62027/getpath'
+const mapURL = 'http://omaraa.ddns.net:62027/db/buildings/eb2/L1_Grey.png';
+
+//Scaling parameters 
 const pixel_to_meters_scale = 4.697624908;
-const dpi_scale = 96/1080;
+const dpi_scale = 96 / 1080;
 const image_scale = 3;
 const origin_x = 0.32;
 const origin_y = 264.18;
-const dO = new DeviceOrientation();
-const alpha = 0.5;
+
+class Vec2 {
+    constructor(public x: number, public y: number) { }
+}
+
+// toKonvaCoords()
+function scaleX(x: number) {
+    return image_scale * (x * pixel_to_meters_scale + origin_x);
+}
+
+function scaleY(y: number) {
+    return image_scale * (y * (-pixel_to_meters_scale) + origin_y);
+}
+
+const toKPos = function (pos: Vec2): Vec2 {
+    return new Vec2((pos.x * pixel_to_meters_scale + origin_x) * image_scale, (pos.y * (-pixel_to_meters_scale) + origin_y) * image_scale);
+}
+
+const toPos = function (pos: Vec2): Vec2 {
+    return new Vec2((pos.x / image_scale - origin_x) / pixel_to_meters_scale, (pos.y / image_scale - origin_y) / (-pixel_to_meters_scale));
+}
+
+function probabilityFunc(upos, bpos, mean, std) {
+  if (std < 1)
+    std = 1;
+  let dist = Math.sqrt((upos.x - bpos.x) ** 2 + (upos.y - bpos.y) ** 2);
+  let A = Math.exp(-((dist - mean) ** 2) / (2 * (std) ** 2));
+  let B = 1 / (std * Math.sqrt(2 * Math.PI));
+  return A * B;
+}
+
+function heatMapColorforValue(value) {
+  let h = (1.0 - value) * 240;
+  return ('hsl(' + h + ', 100%, 50%)');
+}
 
 @Directive({
   selector: '[mapstage]',
 })
-export class MapStage implements OnDestroy{
-
+export class MapStage implements OnDestroy {
+  dO = new DeviceOrientation();
 
   maplayer: any;
   gridlayer: any;
@@ -26,18 +72,23 @@ export class MapStage implements OnDestroy{
   grid: any;
   heading: number = null;
   wedge: any;
+  exitpath: any;
+  exitarrow: any;
+  prevLoc: Vec2 = {x:0,y:0};
 
   updateCompassInterval: any;
   updateGridInterval: any;
+
   constructor(elem: ElementRef, renderer: Renderer2, private shovService: ShovService) {
     renderer.addClass(elem.nativeElement, 'konva');
-    this.stage =  new Konva.Stage({
+    this.stage = new Konva.Stage({
       container: elem.nativeElement,
       width: innerWidth,
       height: innerHeight,
       draggable: true
     }
     );
+    // this.stage.on('tap', () => this.drawPath());
 
     console.log('Stage Constructed');
 
@@ -50,69 +101,120 @@ export class MapStage implements OnDestroy{
     this.wedgelayer = new Konva.Layer({});
     this.setWedge(this.wedgelayer);
 
-    // this.stage.add(this.gridlayer);
+    this.exitpath = new Konva.Line({
+      points: [0, 0],
+      stroke: 'blue',
+      strokeWidth: 10,
+      lineCap: 'round',
+      lineJoin: 'round'
+    });
+
+    this.exitarrow = new Konva.Arrow({
+      points: [0, 0],
+      stroke: 'blue',
+      fill: 'red',
+      strokeWidth: 10,
+      pointerLength: 20,
+      pointerWidth: 15
+    });
+
+    this.wedgelayer.add(this.exitpath);
+    this.wedgelayer.add(this.exitarrow);
+
     this.stage.add(this.maplayer);
+    this.stage.add(this.gridlayer);
     this.stage.add(this.wedgelayer);
 
     this.stage.draw();
 
     this.updateCompassInterval = setInterval(this.drawStage.bind(this), 16);
     this.updateGridInterval = setInterval(this.updateState.bind(this), 500);
-    // console.log("input-box keys  : ", this.str1);
   }
 
-  destroy() {
+  ngOnDestroy() {
     clearInterval(this.updateCompassInterval);
-    console.log('Stage destroyed');
+    clearInterval(this.updateGridInterval);
     this.stage.destroy();
   }
 
+  drawPath() {
+    // var transform = this.stage
+    //   .getAbsoluteTransform()
+    //   .copy();
+
+    // // to detect relative position we need to invert transform
+    // transform.invert();
+
+    // now we find relative point
+    var pos = this.wedge.position();
+    //var realpos = toPos(transform.point(pos));
+
+    //To draw path using real location
+    var realpos = toPos(pos)
+
+    fetch(pathURL, { method: 'PUT', headers: { "Content-Type": "application/json; charset=utf-8" }, body: JSON.stringify(realpos) })
+      .then(res => res.json()) // parse response as JSON (can be res.text() for plain response)
+      .then(response => {
+        var arr = JSON.parse(response);
+        var arrowangle = 180 - (180 * (Math.atan2((arr[3] - arr[1]), (arr[2] - arr[0]))) / Math.PI);
+
+        // here you do what you want with response
+        for (var i = 0; i < response.length; i = i + 2) {
+          arr[i] = scaleX(arr[i])
+          arr[i + 1] = scaleY(arr[i + 1])
+        }
+        this.exitpath.points(arr);
+        this.exitarrow.position({ x: arr[0], y: arr[1] });
+
+        // console.log(arrowangle);
+        this.exitarrow.rotation(arrowangle);
+        this.wedgelayer.draw();
+      })
+      .catch(err => {
+        console.log(err)
+        alert("sorry, there are no results for your search")
+      });
+
+  }
+
   drawStage() {
-    // this.updateState();
-    // dO.getCurrentHeading().then(
-    //   (data: DeviceOrientationCompassHeading) => {
-    //     if(this.heading == null) this.heading = 360 - (data.magneticHeading + 40);
-    //     else this.heading = alpha*(360 - (data.magneticHeading + 40)) + (1-alpha)*this.heading;
-    //     this.rotateNode(this.stage, this.heading);
-    //   },
-    //   (error: any) => console.log(error)
-    // );
     this.gridlayer.batchDraw();
-    // this.wedgelayer.batchDraw();
+    this.drawPath();
+
   }
 
   setFloorplan(bglayer, floorplan) {
 
     let imageObj = new Image();
-    imageObj.onload = function() {
-        floorplan = new Konva.Image({
-          x: 0,
-          y: 0,
-          image: this,
-          width: imageObj.width*image_scale*dpi_scale,
-          height: imageObj.height*image_scale*dpi_scale,
-          opacity: 1,
-        });
-        bglayer.add(floorplan);
-        bglayer.draw();
+    imageObj.onload = function () {
+      floorplan = new Konva.Image({
+        x: 0,
+        y: 0,
+        image: this,
+        width: imageObj.width * image_scale * dpi_scale,
+        height: imageObj.height * image_scale * dpi_scale,
+        opacity: 1,
+      });
+      bglayer.add(floorplan);
+      bglayer.draw();
     };
-    imageObj.src = 'http://omaraa.ddns.net:62027/db/buildings/eb2/L1_1.png';
+    imageObj.src = mapURL;
   }
 
   setGrid(gridlayer) {
-    this.grid = new Array(40);
-    for(let i = 0; i < 40; i++) {
-      this.grid[i] = new Array(36);
+    this.grid = new Array(gridX);
+    for (let i = 0; i < gridX; i++) {
+      this.grid[i] = new Array(gridY);
     }
 
-    for(let x = 0; x < 40; x++) {
-      for(let y = 0; y < 36; y++) {
+    for (let x = 0; x < gridX; x++) {
+      for (let y = 0; y < gridY; y++) {
         this.grid[x][y] = new Konva.Rect(
           {
-            x: this.scaleX(x),
-            y: this.scaleY(y),
-            width: 10,
-            height: 10,
+            x: scaleX(x),
+            y: scaleY(y),
+            width: 5,
+            height: 5,
             fill: 'black',
           }
         );
@@ -122,7 +224,7 @@ export class MapStage implements OnDestroy{
     gridlayer.batchDraw();
   }
 
-  setWedge(wedgelayer){
+  setWedge(wedgelayer) {
     this.wedge = new Konva.Wedge({
       x: 0,
       y: 0,
@@ -137,97 +239,52 @@ export class MapStage implements OnDestroy{
     wedgelayer.batchDraw();
   }
 
-  drawWedgePos(position){
-    this.wedge.position(position);
-    dO.getCurrentHeading().then(
-    (data: DeviceOrientationCompassHeading) => {
-      if(this.heading == null) this.heading = 360 - (data.magneticHeading + 40);
-      else this.heading = alpha*(360 - (data.magneticHeading + 40)) + (1-alpha)*this.heading;
-      this.wedge.rotation(this.heading);
-    },(error: any) => console.log(error)
+  drawWedgePos(position) {
+    let kpos = toKPos(position);
+    this.prevLoc = {x: alphaLoc*kpos.x + (1-alphaLoc)*this.prevLoc.x, y: alphaLoc*kpos.y + (1-alphaLoc)*this.prevLoc.y};
+    this.wedge.position(this.prevLoc);
+    this.dO.getCurrentHeading().then(
+      (data: DeviceOrientationCompassHeading) => {
+        if (this.heading == null) this.heading = 360 - (data.magneticHeading + mapCompassOffset);
+        else this.heading = alphaComp * (360 - (data.magneticHeading + mapCompassOffset)) + (1 - alphaComp) * this.heading;
+        this.wedge.rotation(this.heading);
+      }, (error: any) => console.log(error)
     );
-  }
-
-  // toKonvaCoords()
-  scaleX(x) {
-    return image_scale * (x * pixel_to_meters_scale + origin_x);
-  }
-
-  scaleY(y) {
-    return image_scale * (y * (-pixel_to_meters_scale) + origin_y);
-  }
-
-  rotateNode(node, rotation) {
-    //copied from https://github.com/konvajs/konva/issues/26#issuecomment-438816017
-    const degToRad = Math.PI / 180;
-
-    const rotatePoint = ({x, y}, deg) => {
-        const rcos = Math.cos(deg * degToRad), rsin = Math.sin(deg * degToRad);
-        return {x: x * rcos - y * rsin, y: y * rcos + x * rsin};
-    };
-
-    //current rotation origin (0, 0) relative to desired origin - center (node.width()/2, node.height()/2)
-    const topLeft = {x: -node.width() / 2, y: -node.height() / 2};
-    const current = rotatePoint(topLeft, node.rotation());
-    const rotated = rotatePoint(topLeft, rotation);
-    const dx = rotated.x - current.x, dy = rotated.y - current.y;
-
-    node.rotation(rotation);
-    node.x(node.x() + dx);
-    node.y(node.y() + dy);
-  }
-
-  ngOnDestroy() {
-    clearInterval(this.updateCompassInterval);
-    clearInterval(this.updateGridInterval);
-    this.stage.destroy();
-  }
-
-  probabilityFunc(upos, bpos, mean, std) {
-    let dist = Math.sqrt((upos.x - bpos.x) ** 2 + (upos.y - bpos.y) ** 2);
-    let A = Math.exp(-((dist - mean) ** 2) / (2 * (std) ** 2));
-    let B = 1 / (std * Math.sqrt(2 * Math.PI));
-    return A * B;
-  }
-
-  heatMapColorforValue(value) {
-    let h = (1.0 - value) * 240;
-    return ('hsl(' + h + ', 100%, 50%)');
   }
 
   updateState() {
     let max = 0;
-    let mxx = 0;
-    let myy = 0;
-    for(let x = 0; x < 40; x++) {
-      for(let y = 0; y < 36; y++) {
-        let gridCell = {x: x, y: y};
+    let maxVal: Vec2 = {x:0,y:0};
+
+    for (let x = 0; x < gridX; x++) {
+      for (let y = 0; y < gridY; y++) {
+        let gridCell = { x: x, y: y };
         let value = 0;
         let beacons = this.shovService.getBeacons();
-        for(let i = 0; i < beacons.length; i++) {
+        for (let i = 0; i < beacons.length; i++) {
           let x2 = beacons[i].getXpos();
           let y2 = beacons[i].getYpos();
           let distance = beacons[i].getDistance();
-          if(typeof(distance) != 'number' || isNaN(distance)) {
+          if (typeof (distance) != 'number' || isNaN(distance)) {
             continue;
           }
-          let beaconpos = {x: x2, y: y2};
-          value += this.probabilityFunc(gridCell, beaconpos, distance, distance);
+          let beaconpos = { x: x2, y: y2 };
+          value += probabilityFunc(gridCell, beaconpos, distance, distance);
 
         }
         if (value > max) {
-         mxx = x;
-         myy = y;
-         max = value;
+          maxVal.x = x;
+          maxVal.y = y;
+          max = value;
         }
-        // this.grid[x][y].fill(this.heatMapColorforValue(value));
+        this.grid[x][y].fill(heatMapColorforValue(value));
 
       }
     }
-    // this.grid[mxx][myy].fill('red');
-    this.drawWedgePos(this.grid[mxx][myy].position());
-    console.log(mxx + ', ' + myy);
-
+    this.grid[maxVal.x][maxVal.y].fill('red');
+    
+    this.drawWedgePos(maxVal);
+    console.log(this.prevLoc.x + ', ' + this.prevLoc.y);
   }
 
 }
