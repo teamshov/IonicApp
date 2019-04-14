@@ -2,13 +2,14 @@ import { Directive, ElementRef, Renderer2, OnDestroy, Input } from '@angular/cor
 import Konva from 'konva';
 import { DeviceOrientation, DeviceOrientationCompassHeading } from '@ionic-native/device-orientation/ngx';
 import { ShovService } from '../shov.service';
+import { stages } from 'konva/types/Stage';
 
 //Grid size parameters 
 const gridX = 40;
 const gridY = 36;
 
 //Compass heading parameters 
-const alphaComp = 0.5; //To smoothen compass readings 
+const alphaComp = 0.1; //To smoothen compass readings 
 const alphaLoc = 0.2;
 const mapCompassOffset = 40; //Basic offset of the given map 
 
@@ -76,10 +77,10 @@ export class MapStage implements OnDestroy {
   exitarrow: any;
   prevLoc: Vec2 = {x:0,y:0};
 
-  updateCompassInterval: any;
-  updateGridInterval: any;
+  renderInterval: any;
+  updateInterval: any;
 
-  constructor(elem: ElementRef, renderer: Renderer2, private shovService: ShovService) {
+  constructor(elem: ElementRef, renderer: Renderer2, private shovService: ShovService, private deviceOrientation: DeviceOrientation) {
     renderer.addClass(elem.nativeElement, 'konva');
     this.stage = new Konva.Stage({
       container: elem.nativeElement,
@@ -122,34 +123,49 @@ export class MapStage implements OnDestroy {
     this.wedgelayer.add(this.exitarrow);
 
     this.stage.add(this.maplayer);
-    this.stage.add(this.gridlayer);
+    //this.stage.add(this.gridlayer);
     this.stage.add(this.wedgelayer);
 
     this.stage.draw();
 
-    this.updateCompassInterval = setInterval(this.drawStage.bind(this), 16);
-    this.updateGridInterval = setInterval(this.updateState.bind(this), 500);
+    this.renderInterval = setInterval(this.drawStage.bind(this), 16);
+    this.updateInterval = setInterval(this.updateState.bind(this), 500);
+
+
+    deviceOrientation.watchHeading().subscribe(
+      (data: DeviceOrientationCompassHeading) => {
+        let nh = -720 - (data.magneticHeading + mapCompassOffset);
+        if (this.heading == null) {
+          this.heading = nh
+
+       }
+        else {
+
+      // get current direction
+      let rh = this.heading * Math.PI / 180;
+      let nrh = nh * Math.PI / 180;
+        var dirx = Math.cos(rh);
+        var diry = Math.sin(rh);
+        var dx = Math.cos(nrh);
+        var dy = Math.sin(nrh);
+      // ease the current direction to the target direction
+        dirx += (dx - dirx) * 0.1;
+        diry += (dy - diry) * 0.1;
+          this.heading = Math.atan2(diry, dirx) * 180 / Math.PI;
+        }
+      }
+    );
   }
 
   ngOnDestroy() {
-    clearInterval(this.updateCompassInterval);
-    clearInterval(this.updateGridInterval);
+    clearInterval(this.renderInterval);
+    clearInterval(this.updateInterval);
     this.stage.destroy();
   }
 
-  drawPath() {
-    // var transform = this.stage
-    //   .getAbsoluteTransform()
-    //   .copy();
+  updatePath() {
 
-    // // to detect relative position we need to invert transform
-    // transform.invert();
-
-    // now we find relative point
     var pos = this.wedge.position();
-    //var realpos = toPos(transform.point(pos));
-
-    //To draw path using real location
     var realpos = toPos(pos)
 
     fetch(pathURL, { method: 'PUT', headers: { "Content-Type": "application/json; charset=utf-8" }, body: JSON.stringify(realpos) })
@@ -159,16 +175,17 @@ export class MapStage implements OnDestroy {
         var arrowangle = 180 - (180 * (Math.atan2((arr[3] - arr[1]), (arr[2] - arr[0]))) / Math.PI);
 
         // here you do what you want with response
-        for (var i = 0; i < response.length; i = i + 2) {
+        for (var i = 0; i < arr.length; i = i + 2) {
           arr[i] = scaleX(arr[i])
           arr[i + 1] = scaleY(arr[i + 1])
         }
+
         this.exitpath.points(arr);
         this.exitarrow.position({ x: arr[0], y: arr[1] });
 
         // console.log(arrowangle);
         this.exitarrow.rotation(arrowangle);
-        this.wedgelayer.draw();
+        
       })
       .catch(err => {
         console.log(err)
@@ -178,8 +195,9 @@ export class MapStage implements OnDestroy {
   }
 
   drawStage() {
-    this.gridlayer.batchDraw();
-    this.drawPath();
+    //this.gridlayer.batchDraw();
+    this.stage.batchDraw();
+    
 
   }
 
@@ -197,7 +215,7 @@ export class MapStage implements OnDestroy {
       });
       bglayer.add(floorplan);
       bglayer.draw();
-    };
+    }.bind(imageObj);
     imageObj.src = mapURL;
   }
 
@@ -239,17 +257,38 @@ export class MapStage implements OnDestroy {
     wedgelayer.batchDraw();
   }
 
-  drawWedgePos(position) {
+  updateWedgePos(position) {
     let kpos = toKPos(position);
     this.prevLoc = {x: alphaLoc*kpos.x + (1-alphaLoc)*this.prevLoc.x, y: alphaLoc*kpos.y + (1-alphaLoc)*this.prevLoc.y};
-    this.wedge.position(this.prevLoc);
-    this.dO.getCurrentHeading().then(
-      (data: DeviceOrientationCompassHeading) => {
-        if (this.heading == null) this.heading = 360 - (data.magneticHeading + mapCompassOffset);
-        else this.heading = alphaComp * (360 - (data.magneticHeading + mapCompassOffset)) + (1 - alphaComp) * this.heading;
-        this.wedge.rotation(this.heading);
-      }, (error: any) => console.log(error)
-    );
+    //this.wedge.position(this.prevLoc);
+    
+    let x = -this.prevLoc.x + this.stage.offsetX() + this.stage.width()/2
+    let y = -this.prevLoc.y + this.stage.offsetY() + this.stage.height()/2
+    
+    let stageTween = new Konva.Tween({
+      node: this.stage,
+      x: x,
+      y: y,
+      offsetX: this.wedge.x(),
+      offsetY: this.wedge.y(),
+      duration: 0.5
+    });
+
+    let wedgeTween = new Konva.Tween({
+      node: this.wedge,
+      x: this.prevLoc.x,
+      y: this.prevLoc.y,
+      duration: 0.5
+    });
+
+    wedgeTween.play();
+    stageTween.play();
+
+    var anim = new Konva.Animation((frame) => {
+      this.stage.rotation(this.heading)
+    }, this.stage);
+
+    anim.start();
   }
 
   updateState() {
@@ -283,8 +322,8 @@ export class MapStage implements OnDestroy {
     }
     this.grid[maxVal.x][maxVal.y].fill('red');
     
-    this.drawWedgePos(maxVal);
-    console.log(this.prevLoc.x + ', ' + this.prevLoc.y);
+    this.updateWedgePos(maxVal);
+    this.updatePath();
   }
 
 }
