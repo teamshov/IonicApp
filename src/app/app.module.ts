@@ -11,7 +11,6 @@ import { AppRoutingModule } from './app-routing.module';
 
 import { BluetoothLE } from '@ionic-native/bluetooth-le/ngx';
 import { KonvaModule } from 'ng2-konva';
-import { MapStage } from './mapstage/mapstage.directive';
 
 @NgModule({
   declarations: [AppComponent],

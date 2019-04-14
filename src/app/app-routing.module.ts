@@ -23,7 +23,8 @@ const routes: Routes = [
     path: 'pi-o-distances', 
     loadChildren: './pi-o-distances/pi-o-distances.module#PiODistancesPageModule' 
   },
-  { path: 'alternate-distances', loadChildren: './alternate-distances/alternate-distances.module#AlternateDistancesPageModule' }
+  { path: 'alternate-distances', loadChildren: './alternate-distances/alternate-distances.module#AlternateDistancesPageModule' },
+
 ];
 
 @NgModule({

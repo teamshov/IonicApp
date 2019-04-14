@@ -31,7 +31,7 @@ var AppComponent = /** @class */ (function () {
         var _this = this;
         this.platform.ready().then(function () {
             _this.statusBar.styleDefault();
-            _this.splashScreen.hide();
+            // _this.splashScreen.hide();
         });
     };
     AppComponent = tslib_1.__decorate([
