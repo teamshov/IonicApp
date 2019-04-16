@@ -3,7 +3,7 @@
     <name>Safetyscape</name>
     <description>An app to aid in emergency evacuation.</description>
     <author email="hi@ionicframework" href="http://ionicframework.com/">Team Shov</author>
-    <content src="index.html" />
+    <content original-src="index.html" src="http://192.168.1.129:8100" />
     <access origin="*" />
     <allow-intent href="http://*/*" />
     <allow-intent href="https://*/*" />
@@ -87,5 +87,6 @@
     <plugin name="cordova-plugin-bluetoothle" spec="4.5.3" />
     <plugin name="cordova-plugin-device-orientation" spec="2.0.1" />
     <plugin name="cordova-plugin-advanced-http" spec="2.0.5" />
+    <allow-navigation href="http://192.168.1.129:8100" sessionid="7f720a2b" />
     <engine name="android" spec="7.1.4" />
 </widget>

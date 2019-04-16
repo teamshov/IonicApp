@@ -11,11 +11,11 @@ const gridY = 36;
 //Compass heading parameters 
 const alphaComp = 0.1; //To smoothen compass readings 
 const alphaLoc = 0.2;
-const mapCompassOffset = 40; //Basic offset of the given map 
+const mapCompassOffset = 60; //Basic offset of the given map 
 
 //Links
 const pathURL = 'http://omaraa.ddns.net:62027/getpath'
-const mapURL = 'http://omaraa.ddns.net:62027/db/buildings/eb2/L1_Grey.png';
+const mapURL = 'http://omaraa.ddns.net:62027/db/buildings/eb2/L1_Black.png';
 
 //Scaling parameters 
 const pixel_to_meters_scale = 4.697624908;
@@ -134,7 +134,7 @@ export class MapStage implements OnDestroy {
 
     deviceOrientation.watchHeading().subscribe(
       (data: DeviceOrientationCompassHeading) => {
-        let nh = -720 - (data.magneticHeading + mapCompassOffset);
+        let nh = -360 - (data.magneticHeading + mapCompassOffset);
         if (this.heading == null) {
           this.heading = nh
 
@@ -149,8 +149,8 @@ export class MapStage implements OnDestroy {
         var dx = Math.cos(nrh);
         var dy = Math.sin(nrh);
       // ease the current direction to the target direction
-        dirx += (dx - dirx) * 0.1;
-        diry += (dy - diry) * 0.1;
+        dirx += (dx - dirx) * 0.25;
+        diry += (dy - diry) * 0.25;
           this.heading = Math.atan2(diry, dirx) * 180 / Math.PI;
         }
       }
@@ -286,9 +286,12 @@ export class MapStage implements OnDestroy {
 
     var anim = new Konva.Animation((frame) => {
       this.stage.rotation(this.heading)
+      
     }, this.stage);
 
+
     anim.start();
+    //anim2.start();
   }
 
   updateState() {
