@@ -3,6 +3,7 @@ import Konva from 'konva';
 import { DeviceOrientation, DeviceOrientationCompassHeading } from '@ionic-native/device-orientation/ngx';
 import { ShovService } from '../shov.service';
 import { stages } from 'konva/types/Stage';
+import {Vec2} from '../Util'
 
 //Grid size parameters 
 const gridX = 40;
@@ -24,9 +25,6 @@ const image_scale = 3;
 const origin_x = 0.32;
 const origin_y = 264.18;
 
-class Vec2 {
-    constructor(public x: number, public y: number) { }
-}
 
 // toKonvaCoords()
 function scaleX(x: number) {
@@ -43,15 +41,6 @@ const toKPos = function (pos: Vec2): Vec2 {
 
 const toPos = function (pos: Vec2): Vec2 {
     return new Vec2((pos.x / image_scale - origin_x) / pixel_to_meters_scale, (pos.y / image_scale - origin_y) / (-pixel_to_meters_scale));
-}
-
-function probabilityFunc(upos, bpos, mean, std) {
-  if (std < 1)
-    std = 1;
-  let dist = Math.sqrt((upos.x - bpos.x) ** 2 + (upos.y - bpos.y) ** 2);
-  let A = Math.exp(-((dist - mean) ** 2) / (2 * (std) ** 2));
-  let B = 1 / (std * Math.sqrt(2 * Math.PI));
-  return A * B;
 }
 
 function heatMapColorforValue(value) {
@@ -123,14 +112,13 @@ export class MapStage implements OnDestroy {
     this.wedgelayer.add(this.exitarrow);
 
     this.stage.add(this.maplayer);
-    //this.stage.add(this.gridlayer);
     this.stage.add(this.wedgelayer);
 
     this.stage.draw();
 
     this.renderInterval = setInterval(this.drawStage.bind(this), 16);
-    this.updateInterval = setInterval(this.updateState.bind(this), 500);
-
+    //this.updateInterval = setInterval(this.updateState.bind(this), 500);
+    shovService.updateStateEvent.subscribe((pos)=>{this.updateState(pos)})
 
     deviceOrientation.watchHeading().subscribe(
       (data: DeviceOrientationCompassHeading) => {
@@ -159,7 +147,7 @@ export class MapStage implements OnDestroy {
 
   ngOnDestroy() {
     clearInterval(this.renderInterval);
-    clearInterval(this.updateInterval);
+    //clearInterval(this.updateInterval);
     this.stage.destroy();
   }
 
@@ -200,7 +188,7 @@ export class MapStage implements OnDestroy {
     
 
   }
-
+ 
   setFloorplan(bglayer, floorplan) {
 
     let imageObj = new Image();
@@ -294,38 +282,10 @@ export class MapStage implements OnDestroy {
     //anim2.start();
   }
 
-  updateState() {
-    let max = 0;
-    let maxVal: Vec2 = {x:0,y:0};
-
-    for (let x = 0; x < gridX; x++) {
-      for (let y = 0; y < gridY; y++) {
-        let gridCell = { x: x, y: y };
-        let value = 0;
-        let beacons = this.shovService.getBeacons();
-        for (let i = 0; i < beacons.length; i++) {
-          let x2 = beacons[i].getXpos();
-          let y2 = beacons[i].getYpos();
-          let distance = beacons[i].getDistance();
-          if (typeof (distance) != 'number' || isNaN(distance)) {
-            continue;
-          }
-          let beaconpos = { x: x2, y: y2 };
-          value += probabilityFunc(gridCell, beaconpos, distance, distance);
-
-        }
-        if (value > max) {
-          maxVal.x = x;
-          maxVal.y = y;
-          max = value;
-        }
-        this.grid[x][y].fill(heatMapColorforValue(value));
-
-      }
-    }
-    this.grid[maxVal.x][maxVal.y].fill('red');
-    
-    this.updateWedgePos(maxVal);
+  updateState(pos : Vec2) {
+    //let pos = this.shovService.pos;
+    console.log(pos)
+    this.updateWedgePos(pos);
     this.updatePath();
   }
 

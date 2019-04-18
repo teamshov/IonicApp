@@ -79,3 +79,7 @@ export class Beacon {
         return this.static_dist;
     }
 }
+
+export class Vec2 {
+    constructor(public x: number, public y: number) { }
+}

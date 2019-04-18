@@ -1,6 +1,6 @@
 import { Component, OnInit, NgZone } from '@angular/core';
 import { ShovService } from '../shov.service';
-import { Beacon } from '../BeaconClass';
+import { Beacon } from '../Util';
 
 @Component({
   selector: 'app-list',

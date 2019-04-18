@@ -11,20 +11,46 @@ import {
 import {
   HTTP
 } from '@ionic-native/http/ngx';
-import {
-  Beacon
-} from './BeaconClass';
-const maxDelay = 5000;
+
+import {Beacon, Vec2} from './Util';
+import { interval } from 'rxjs';
+
+
+
+
+function probabilityFunc(upos, bpos, mean, std) {
+  if (std < 1)
+    std = 1;
+  let dist = Math.sqrt((upos.x - bpos.x) ** 2 + (upos.y - bpos.y) ** 2);
+  let A = Math.exp(-((dist - mean) ** 2) / (2 * (std) ** 2));
+  let B = 1 / (std * Math.sqrt(2 * Math.PI));
+  return A * B;
+}
+
 
 @Injectable({
   providedIn: 'root',
 
 })
 export class ShovService {
+
+  //Grid size parameters 
+  static gridX : number = 40;
+  static gridY : number = 36;
+  static maxDelay : number = 5000;
+
   beacons: {
     [key: string]: Beacon;
   } = {};
+
+
   updateBeaconEvent: EventEmitter < boolean > = new EventEmitter();
+  updateStateEvent: EventEmitter < Vec2 > = new EventEmitter();
+
+  updateInterval: any;
+  pos : Vec2 = {x:0, y:0};
+
+
   constructor(
     public ble: BluetoothLE,
     public plt: Platform,
@@ -50,6 +76,7 @@ export class ShovService {
         error => {
           console.log(error);
         });
+      
       this.bleScan();
     });
     this.http.get('http://omaraa.ddns.net:62027/db/all/beacons', {}, {})
@@ -81,7 +108,7 @@ export class ShovService {
         console.log(error.headers);
 
       });
-
+    this.updateInterval = setInterval(this.updateState.bind(this), 500);
   }
 
   private asHexString(i) {
@@ -167,6 +194,38 @@ export class ShovService {
     }
   }
 
+  updateState() {
+    let max = 0;
+    let maxVal: Vec2 = {x:0,y:0};
+
+    for (let x = 0; x < ShovService.gridX; x++) {
+      for (let y = 0; y < ShovService.gridY; y++) {
+        let gridCell = { x: x, y: y };
+        let value = 0;
+        let beacons = this.getBeacons();
+        for (let i = 0; i < beacons.length; i++) {
+          let x2 = beacons[i].getXpos();
+          let y2 = beacons[i].getYpos();
+          let distance = beacons[i].getDistance();
+          if (typeof (distance) != 'number' || isNaN(distance)) {
+            continue;
+          }
+          let beaconpos = { x: x2, y: y2 };
+          value += probabilityFunc(gridCell, beaconpos, distance, distance);
+
+        }
+        if (value > max) {
+          maxVal.x = x;
+          maxVal.y = y;
+          max = value;
+        }
+
+      }
+    }
+    this.pos = maxVal;
+    this.updateStateEvent.next(maxVal);
+  }
+
   getBeacons() {
     return Object.values(this.beacons);
   }
@@ -176,6 +235,6 @@ export class ShovService {
   }
 
   isBeaconValid(beacon) {
-    return (Date.now() - beacon.getTimestamp()) > maxDelay;
+    return (Date.now() - beacon.getTimestamp()) > ShovService.maxDelay;
   }
 }
