@@ -35,6 +35,11 @@ export class AppComponent {
       title: 'Alternate Distances',
       url: '/alternate-distances',
       icon: 'walk'
+    },
+    {
+      title: 'Test Page',
+      url: '/test',
+      icon: 'thermometer'
     }
   ];
 

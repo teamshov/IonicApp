@@ -237,4 +237,44 @@ export class ShovService {
   isBeaconValid(beacon) {
     return (Date.now() - beacon.getTimestamp()) > ShovService.maxDelay;
   }
+
+  runTest(testname : string, rpos : Vec2, numberofreadings: number) {
+    let test = new Test(testname, rpos, numberofreadings);
+
+    let sub = this.updateStateEvent.subscribe((pos)=>{
+      if(test.n >= test.MAXN) {
+        sub.unsubscribe();
+        this.http.put("http://omaraa.ddns.net:62027/db/tests/" + test.name, JSON.stringify(test), {'Content-Type': 'application/json' });
+      }
+      test.n += 1;
+      let dist = Vec2.dist(pos, test.realpos);
+      test.distances.push(dist);
+    })
+  }
+}
+
+class Test {
+  distances: Array<number> = []
+  mean: number;
+  stdv: number;
+  n: number = 0;
+
+  constructor(public name: string, public realpos: Vec2, public MAXN: number) {
+
+  }
+
+  calculate(){
+    this.distances.forEach((d)=>{
+      this.mean += d;
+    })
+
+    this.mean /= this.distances.length;
+    this.distances.forEach((d)=>{
+      this.stdv += Math.pow(d-this.mean, 2);
+    })
+
+    this.stdv /= this.distances.length;
+    this.stdv = Math.sqrt(this.stdv);
+  }
+
 }
