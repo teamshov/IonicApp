@@ -1,4 +1,5 @@
 import { Component, OnInit } from '@angular/core';
+import { ShovService } from '../shov.service';
 
 @Component({
   selector: 'app-test',
@@ -6,10 +7,20 @@ import { Component, OnInit } from '@angular/core';
   styleUrls: ['./test.page.scss'],
 })
 export class TestPage implements OnInit {
+  testname : string;
+  x : number;
+  y : number;
+  n : number;
 
-  constructor() { }
+  constructor(
+    private shovService : ShovService
+  ) { }
 
   ngOnInit() {
+  }
+
+  begintest() {
+    this.shovService.runTest(this.testname, {x:this.x, y:this.y}, this.n);
   }
 
 }

@@ -244,7 +244,7 @@ export class ShovService {
     let sub = this.updateStateEvent.subscribe((pos)=>{
       if(test.n >= test.MAXN) {
         sub.unsubscribe();
-        this.http.put("http://omaraa.ddns.net:62027/db/tests/" + test.name, JSON.stringify(test), {'Content-Type': 'application/json' });
+        this.http.put("http://omaraa.ddns.net:62027/db/tests/" + test.name, test, {'Content-Type': 'application/json' });
       }
       test.n += 1;
       let dist = Vec2.dist(pos, test.realpos);

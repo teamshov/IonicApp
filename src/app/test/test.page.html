@@ -11,19 +11,19 @@
   
   <ion-item>
     <ion-label>Test Name</ion-label>
-    <ion-input type="text"></ion-input>
+    <ion-input type="text" [(ngModel)]="testname"></ion-input>
   </ion-item>
 
   <ion-item>
       <ion-label>x</ion-label>
-      <ion-input type="number"></ion-input>
+      <ion-input type="number" [(ngModel)]="x"></ion-input>
       <ion-label>y</ion-label>
-      <ion-input type="number"></ion-input>
+      <ion-input type="number" [(ngModel)]="y"></ion-input>
     </ion-item>
     <ion-item>
         <ion-label>Number of iterations:</ion-label>
-        <ion-input type="number"></ion-input>
+        <ion-input type="number"  [(ngModel)]="n"></ion-input>
       </ion-item>
-      <ion-button>Start Test</ion-button>
+      <ion-button (click)="begintest()">Start Test</ion-button>
 
 </ion-content>

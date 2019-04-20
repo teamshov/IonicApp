@@ -68,6 +68,7 @@ export class MapStage implements OnDestroy {
 
   renderInterval: any;
   updateInterval: any;
+  updatesubs : any;
 
   constructor(elem: ElementRef, renderer: Renderer2, private shovService: ShovService, private deviceOrientation: DeviceOrientation) {
     renderer.addClass(elem.nativeElement, 'konva');
@@ -118,7 +119,7 @@ export class MapStage implements OnDestroy {
 
     this.renderInterval = setInterval(this.drawStage.bind(this), 16);
     //this.updateInterval = setInterval(this.updateState.bind(this), 500);
-    shovService.updateStateEvent.subscribe((pos)=>{this.updateState(pos)})
+    this.updatesubs = shovService.updateStateEvent.subscribe((pos)=>{this.updateState(pos)})
 
     deviceOrientation.watchHeading().subscribe(
       (data: DeviceOrientationCompassHeading) => {
@@ -147,6 +148,7 @@ export class MapStage implements OnDestroy {
 
   ngOnDestroy() {
     clearInterval(this.renderInterval);
+    this.updatesubs.unsubscribe();
     //clearInterval(this.updateInterval);
     this.stage.destroy();
   }
