@@ -239,28 +239,30 @@ export class ShovService {
     return (Date.now() - beacon.getTimestamp()) > ShovService.maxDelay;
   }
 
+  test:Test;
+  sub:any;
   runTest(testname : string, rpos : Vec2, numberofreadings: number) {
-    let test = new Test(testname, rpos, numberofreadings);
+    this.test = new Test(testname, rpos, numberofreadings);
 
-    let sub = this.updateStateEvent.subscribe((pos)=>{
-      if(test.n >= test.MAXN) {
-        sub.unsubscribe();
+    this.sub = this.updateStateEvent.subscribe((pos)=>{
+      if(this.test.n >= this.test.MAXN) {
+        this.sub.unsubscribe();
 
         $.ajaxSetup({
           contentType : 'application/json',
           processData : false
       });
           $.ajax({
-            url: 'http://omaraa.ddns.net:62027/db/tests/'+test.name,    //Your api url
+            url: 'http://omaraa.ddns.net:62027/db/tests/'+this.test.name,    //Your api url
             type: 'PUT',   //type is any HTTP method
-            data: JSON.stringify(test),      //Data as js object
+            data: JSON.stringify(this.test),      //Data as js object
             success: function () {
             }
         });
       }
-      test.n += 1;
-      let dist = Vec2.dist(pos, test.realpos);
-      test.distances.push(dist);
+      this.test.n += 1;
+      let dist = Vec2.dist(pos, this.test.realpos);
+      this.test.distances.push(dist);
     })
   }
 }
