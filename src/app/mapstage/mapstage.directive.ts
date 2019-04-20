@@ -286,7 +286,6 @@ export class MapStage implements OnDestroy {
 
   updateState(pos : Vec2) {
     //let pos = this.shovService.pos;
-    console.log(pos)
     this.updateWedgePos(pos);
     this.updatePath();
   }
