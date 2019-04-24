@@ -2,6 +2,9 @@ import { Component, OnInit, NgZone } from '@angular/core';
 
 import { ShovService } from '../shov.service';
 import { DeviceOrientation } from '@ionic-native/device-orientation/ngx';
+import { LocalNotifications, ELocalNotificationTriggerUnit, ILocalNotificationActionType, ILocalNotification } from '@ionic-native/local-notifications/ngx';
+import { AlertController, Platform } from '@ionic/angular';
+import { BackgroundMode } from '@ionic-native/background-mode/ngx';
 
 @Component({
   selector: 'app-home',
@@ -13,6 +16,48 @@ export class Home {
   constructor(
     private shovService: ShovService, 
     private deviceOrientation: DeviceOrientation,
-    ){}
+    private plt: Platform, 
+    private localNotifications: LocalNotifications, 
+    private alertCtrl: AlertController,
+    private backgroundMode: BackgroundMode
+    ){
+      this.plt.ready().then(() => {
+        this.localNotifications.on('click').subscribe(res => {
+          let msg = res.data ? res.data.mydata : '';
+          this.showAlert(res.title, res.text, msg);
+        });
+   
+        this.localNotifications.on('trigger').subscribe(res => {
+          let msg = res.data ? res.data.mydata : '';
+          this.showAlert(res.title, res.text, msg);
+        });
+      });
+      this.backgroundMode.enable();
+    }
 
+    notify(){
+      setInterval(this.scheduleNotification.bind(this), 2000);
+    }
+
+    scheduleNotification() {
+      console.log("notif");
+      this.localNotifications.schedule({
+        id: 1,
+        title: 'Attention',
+        text: 'Test Notification',
+        data: { mydata: 'My hidden message this is' },
+        trigger: { in: 1, unit: ELocalNotificationTriggerUnit.SECOND },
+        foreground: true // Show the notification while app is open
+      });        
+    }
+
+    showAlert(header, sub, msg) {
+      this.alertCtrl.create({
+        header: header,
+        subHeader: sub,
+        message: msg,
+        buttons: ['Ok']
+      }).then(alert => alert.present());
+    }
+  
 }

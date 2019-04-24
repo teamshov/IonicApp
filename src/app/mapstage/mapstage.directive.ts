@@ -4,18 +4,19 @@ import { DeviceOrientation, DeviceOrientationCompassHeading } from '@ionic-nativ
 import { ShovService } from '../shov.service';
 import { stages } from 'konva/types/Stage';
 import {Vec2} from '../Util'
-
+import { Device } from '@ionic-native/device/ngx';
+ 
 //Grid size parameters 
 const gridX = 40;
 const gridY = 36;
 
 //Compass heading parameters 
-const alphaComp = 0.1; //To smoothen compass readings 
+const alphaComp= 0.1; //To smoothen compass readings 
 const alphaLoc = 0.2;
 const mapCompassOffset = 60; //Basic offset of the given map 
 
 //Links
-const pathURL = 'http://omaraa.ddns.net:62027/getpath'
+let pathURL = 'http://omaraa.ddns.net:62027/getpath/';
 const mapURL = 'http://omaraa.ddns.net:62027/db/buildings/eb2/L1_Black.png';
 
 //Scaling parameters 
@@ -53,6 +54,8 @@ function heatMapColorforValue(value) {
 })
 export class MapStage implements OnDestroy {
   dO = new DeviceOrientation();
+  UID:any;
+  DID: any;
 
   maplayer: any;
   gridlayer: any;
@@ -70,7 +73,16 @@ export class MapStage implements OnDestroy {
   updateInterval: any;
   updatesubs : any;
 
-  constructor(elem: ElementRef, renderer: Renderer2, private shovService: ShovService, private deviceOrientation: DeviceOrientation) {
+  constructor(
+    private elem: ElementRef, 
+    private renderer: Renderer2, 
+    private shovService: ShovService, 
+    private deviceOrientation: DeviceOrientation,
+    private device: Device) {
+  
+    console.log('Device UUID is: ' + this.device.uuid);
+    pathURL = pathURL + this.device.uuid;
+
     renderer.addClass(elem.nativeElement, 'konva');
     this.stage = new Konva.Stage({
       container: elem.nativeElement,
@@ -158,6 +170,7 @@ export class MapStage implements OnDestroy {
     var pos = this.wedge.position();
     var realpos = toPos(pos)
 
+    console.log(pathURL);
     fetch(pathURL, { method: 'PUT', headers: { "Content-Type": "application/json; charset=utf-8" }, body: JSON.stringify(realpos) })
       .then(res => res.json()) // parse response as JSON (can be res.text() for plain response)
       .then(response => {

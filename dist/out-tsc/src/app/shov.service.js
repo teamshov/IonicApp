@@ -4,6 +4,7 @@ import { Platform } from '@ionic/angular';
 import { BluetoothLE } from '@ionic-native/bluetooth-le/ngx';
 import { HTTP } from '@ionic-native/http/ngx';
 import { Beacon } from './BeaconClass';
+
 var ShovService = /** @class */ (function () {
     function ShovService(ble, plt, http, ShovBeacons) {
         if (ShovBeacons === void 0) { ShovBeacons = new Array(); }
