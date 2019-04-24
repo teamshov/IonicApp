@@ -6,7 +6,6 @@ import { LocalNotifications, ELocalNotificationTriggerUnit, ILocalNotificationAc
 import { AlertController, Platform } from '@ionic/angular';
 import { BackgroundMode } from '@ionic-native/background-mode/ngx';
 import { HTTP } from '@ionic-native/http/ngx';
-import { EmptyError } from 'rxjs';
 @Component({
   selector: 'app-home',
   templateUrl: 'home.page.html',
@@ -43,20 +42,18 @@ export class Home {
 
     scheduleNotification() {
       this.http.get(('http://omaraa.ddns.net:62027/emergency'), {}, {}).then(
-            data => {
-              let parsedData = JSON.parse(data.data);
-              let emergency = parsedData['emergencyStatus'];
-              if (emergency){
-                this.localNotifications.schedule({
-                  id: 1,
-                  title: 'Emergency',
-                  text: 'Please evacuate immediately',
-                  trigger: { in: 1, unit: ELocalNotificationTriggerUnit.SECOND },
-                  foreground: true // Show the notification while app is open
-                });
-              }
-            }
-          );              
+        data => {
+          if (data){
+            this.localNotifications.schedule({
+              id: 1,
+              title: 'Emergency',
+              text: 'Please evacuate immediately',
+              trigger: { in: 1, unit: ELocalNotificationTriggerUnit.SECOND },
+              foreground: true // Show the notification while app is open
+            });
+          }
+        }
+      );              
     }
 
     showAlert(header, sub, msg) {

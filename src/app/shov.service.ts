@@ -12,7 +12,7 @@ import {
   HTTP
 } from '@ionic-native/http/ngx';
 
-import {Beacon, Vec2} from './Util';
+import {Beacon, Vec2, FloorPlanInput} from './Util';
 import { interval } from 'rxjs';
 import $ from 'jquery';
 
@@ -39,6 +39,11 @@ export class ShovService {
   static gridX : number = 40;
   static gridY : number = 36;
   static maxDelay : number = 5000;
+  updatedBuilding: boolean = false;
+  enterBeaconRSSI: string; 
+  buildingName: string;
+  floorName: string;
+  imageName: string;
 
   beacons: {
     [key: string]: Beacon;
@@ -47,6 +52,7 @@ export class ShovService {
 
   updateBeaconEvent: EventEmitter < boolean > = new EventEmitter();
   updateStateEvent: EventEmitter < Vec2 > = new EventEmitter();
+  floorImageEvent : EventEmitter<boolean> = new EventEmitter();
 
   updateInterval: any;
   pos : Vec2 = {x:0, y:0};
@@ -80,35 +86,9 @@ export class ShovService {
       
       this.bleScan();
     });
-    this.http.get('http://omaraa.ddns.net:62027/db/all/beacons', {}, {})
-      .then(data => {
-        console.log(data);
-        let beaconIDs = (JSON.parse(data.data)); // data received by server
-        console.log(beaconIDs);
-        for (let i = 0; i < beaconIDs.length; i++) {
-          let b = new Beacon(beaconIDs[i]);
-          this.beacons[beaconIDs[i]] = b;
-          this.http.get(('http://omaraa.ddns.net:62027/db/beacons/' + beaconIDs[i]), {}, {}).then(
-            bdata => {
-              let parsedData = JSON.parse(bdata.data);
-              let offset = parsedData['offset'];
-              let xpos = parsedData['xpos'];
-              let ypos = parsedData['ypos'];
-              let piD = parsedData['distance'];
-              console.log(parsedData);
-              b.DBinfo(offset, xpos, ypos, 'Blue', piD);
-            }
-          );
-        }
-        console.log(this.beacons);
-      })
-      .catch(error => {
+    
 
-        console.log(error.status);
-        console.log(error.error); // error message as string
-        console.log(error.headers);
-
-      });
+    
     this.updateInterval = setInterval(this.updateState.bind(this), 500);
   }
 
@@ -145,7 +125,40 @@ export class ShovService {
     return advertisementData;
   }
 
+  initBeacon(id : any) {
+    this.http.get(('http://omaraa.ddns.net:62027/db/beacons/' + id), {}, {}).then(
+      bdata => {
+        let beaconDoc = JSON.parse(bdata.data);
+        this.beacons[id].Set(beaconDoc);
+        let b = this.beacons[id];
+        this.beacons[b.id] = b;
 
+        this.buildingName = b.building;
+        this.floorName = b.floor;
+        this.updatedBuilding = true;
+        
+      }
+    ).catch((err)=>{
+      console.log(err)
+    });
+  }
+
+  initBuilding() {
+
+    this.http.get(('http://omaraa.ddns.net:62027/db/buildings/' + this.buildingName), {}, {}).then(
+      data => {
+        alert("welcome to " + this.buildingName + " " + this.floorName);
+
+        let doc = JSON.parse(data.data);
+        this.imageName = doc["floors"][this.floorName]["image"];
+        this.floorImageEvent.next()
+      }
+    ).catch((err)=>{
+      console.log(err)
+    });
+
+    
+  }
 
   bleScan() {
 
@@ -179,7 +192,14 @@ export class ShovService {
     let id = '';
 
     new Uint8Array(devdata["16"]).slice(3, 11).forEach(e => id += this.asHexString(e));
-    this.updateBeacon(id, data['rssi']);
+
+    if(this.beacons[id] == null) {
+      console.log("initializing " + id);
+      this.beacons[id] = new Beacon(id);
+      this.initBeacon(id);
+    }
+    else 
+      this.updateBeacon(id, data['rssi']);
   }
 
   errors(err) {
@@ -196,6 +216,12 @@ export class ShovService {
   }
 
   updateState() {
+
+    if(this.updatedBuilding == true) {
+      this.initBuilding();
+      this.updatedBuilding = false;
+    }
+
     let max = 0;
     let maxVal: Vec2 = {x:0,y:0};
 

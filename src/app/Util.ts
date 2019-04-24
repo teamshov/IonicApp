@@ -15,17 +15,22 @@ export class Beacon {
     piDistance: number;
     static_dist: number;
     alt_dist: number;
+    floor : string;
+    building : string;
 
-    constructor(id: string){
-        this.id = id;
+    constructor(id : any){
+        this.id = id
+
     }
 
-    public DBinfo(off, x, y, col, piD){
-        this.offset = off;
-        this.xpos = x;
-        this.ypos = y;
-        this.color = col;
-        this.piDistance = piD;
+    public Set(doc : any) {
+        this.id = doc["_id"];
+        this.xpos = doc["xpos"]
+        this.ypos = doc["ypos"]
+        this.building = doc["building"]
+        this.floor = doc["floor"]
+        this.offset = doc["offset"]
+        this.piDistance = doc["distance"]
     }
 
     public getID(){
@@ -86,4 +91,9 @@ export class Vec2 {
     static dist(v1:Vec2, v2:Vec2) {
         return Math.sqrt(Math.pow(v1.x-v2.x, 2)+Math.pow(v1.y-v2.y, 2));
     }
+}
+
+export class FloorPlanInput {
+    building : string;
+    image : string;
 }

@@ -17,7 +17,7 @@ const mapCompassOffset = 60; //Basic offset of the given map
 
 //Links
 let pathURL = 'http://omaraa.ddns.net:62027/getpath/';
-const mapURL = 'http://omaraa.ddns.net:62027/db/buildings/eb2/L1_Black.png';
+const mapURL = 'http://omaraa.ddns.net:62027/db/buildings/';
 
 //Scaling parameters 
 const pixel_to_meters_scale = 4.697624908;
@@ -72,6 +72,7 @@ export class MapStage implements OnDestroy {
   renderInterval: any;
   updateInterval: any;
   updatesubs : any;
+  newFloorImageSub : any;
 
   constructor(
     private elem: ElementRef, 
@@ -96,7 +97,7 @@ export class MapStage implements OnDestroy {
     console.log('Stage Constructed');
 
     this.maplayer = new Konva.Layer({});
-    this.setFloorplan(this.maplayer, this.floorplan);
+    // this.setFloorplan(this.maplayer, this.floorplan);
 
     this.gridlayer = new Konva.Layer({});
     this.setGrid(this.gridlayer);
@@ -132,6 +133,7 @@ export class MapStage implements OnDestroy {
     this.renderInterval = setInterval(this.drawStage.bind(this), 16);
     //this.updateInterval = setInterval(this.updateState.bind(this), 500);
     this.updatesubs = shovService.updateStateEvent.subscribe((pos)=>{this.updateState(pos)})
+    this.newFloorImageSub = shovService.floorImageEvent.subscribe(()=>{this.LoadFloorPlan()})
 
     deviceOrientation.watchHeading().subscribe(
       (data: DeviceOrientationCompassHeading) => {
@@ -161,6 +163,7 @@ export class MapStage implements OnDestroy {
   ngOnDestroy() {
     clearInterval(this.renderInterval);
     this.updatesubs.unsubscribe();
+    this.newFloorImageSub.unsubscribe();
     //clearInterval(this.updateInterval);
     this.stage.destroy();
   }
@@ -219,8 +222,32 @@ export class MapStage implements OnDestroy {
       bglayer.add(floorplan);
       bglayer.draw();
     }.bind(imageObj);
-    imageObj.src = mapURL;
+    imageObj.src = mapURL + this.shovService.buildingName + "/" + this.shovService.imageName;
   }
+
+
+  imageObj:any;
+  LoadFloorPlan() {
+    this.imageObj = new Image();
+    this.imageObj.onload = () => {
+
+      if(this.floorplan) {
+        this.floorplan.destroy();
+      }      
+      this.floorplan = new Konva.Image({
+        x: 0,
+        y: 0,
+        image: this.imageObj,
+        width: this.imageObj.width * image_scale * dpi_scale,
+        height: this.imageObj.height * image_scale * dpi_scale,
+        opacity: 1,
+      });
+      this.maplayer.add(this.floorplan);
+      this.maplayer.draw();
+    };
+    this.imageObj.src = mapURL + this.shovService.buildingName + "/" + this.shovService.imageName;
+  }
+  
 
   setGrid(gridlayer) {
     this.grid = new Array(gridX);
