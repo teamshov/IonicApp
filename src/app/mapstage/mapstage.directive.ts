@@ -97,7 +97,7 @@ export class MapStage implements OnDestroy {
     console.log('Stage Constructed');
 
     this.maplayer = new Konva.Layer({});
-    // this.setFloorplan(this.maplayer, this.floorplan);
+    this.LoadFloorPlan();
 
     this.gridlayer = new Konva.Layer({});
     this.setGrid(this.gridlayer);

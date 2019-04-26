@@ -128,14 +128,18 @@ export class ShovService {
   initBeacon(id : any) {
     this.http.get(('http://omaraa.ddns.net:62027/db/beacons/' + id), {}, {}).then(
       bdata => {
+        this.beacons[id] = new Beacon(id)
         let beaconDoc = JSON.parse(bdata.data);
         this.beacons[id].Set(beaconDoc);
         let b = this.beacons[id];
         this.beacons[b.id] = b;
 
-        this.buildingName = b.building;
-        this.floorName = b.floor;
-        this.updatedBuilding = true;
+        if (this.buildingName != b.building || this.floorName != b.floor){
+          this.buildingName = b.building;
+          this.floorName = b.floor;
+          this.updatedBuilding = true;
+          
+        }
         
       }
     ).catch((err)=>{
@@ -195,7 +199,7 @@ export class ShovService {
 
     if(this.beacons[id] == null) {
       console.log("initializing " + id);
-      this.beacons[id] = new Beacon(id);
+      //this.beacons[id] = new Beacon(id);
       this.initBeacon(id);
     }
     else 

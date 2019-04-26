@@ -13,6 +13,8 @@ import { HTTP } from '@ionic-native/http/ngx';
 })
 export class Home {
 
+  toolbarColor:string = "blue";
+  prevStatus:boolean = false;
   constructor(
     private shovService: ShovService, 
     private deviceOrientation: DeviceOrientation,
@@ -23,38 +25,38 @@ export class Home {
     private http: HTTP
     ){
       this.plt.ready().then(() => {
-        this.localNotifications.on('click').subscribe(res => {
-          let msg = res.data ? res.data.mydata : '';
-          this.showAlert(res.title, res.text, msg);
-        });
-   
         this.localNotifications.on('trigger').subscribe(res => {
           let msg = res.data ? res.data.mydata : '';
           this.showAlert(res.title, res.text, msg);
         });
       });
+      setInterval(this.emergencyNotification.bind(this), 2000);
       this.backgroundMode.enable();
+      
     }
 
-    notify(){
-      setInterval(this.scheduleNotification.bind(this), 2000);
-    }
-
-    scheduleNotification() {
-      this.http.get(('http://omaraa.ddns.net:62027/emergency'), {}, {}).then(
-        data => {
-          if (data){
-            this.localNotifications.schedule({
-              id: 1,
-              title: 'Emergency',
-              text: 'Please evacuate immediately',
-              trigger: { in: 1, unit: ELocalNotificationTriggerUnit.SECOND },
-              foreground: true // Show the notification while app is open
-            });
+    emergencyNotification() {
+        this.http.get(('http://omaraa.ddns.net:62027/emergency'), {}, {}).then(
+          data => {
+            let estatus = JSON.parse(data.data);
+            console.log(estatus);
+            if (estatus == true && this.prevStatus == false){
+              this.prevStatus = true;
+              this.localNotifications.schedule({
+                id: 1,
+                title: 'Emergency',
+                text: 'Please evacuate immediately',
+                trigger: { in: 0.1, unit: ELocalNotificationTriggerUnit.SECOND },
+                foreground: true // Show the notification while app is open
+              });
+              this.toolbarColor = 'red';
+            }
+            else if (estatus == false && this.prevStatus == true){
+              this.prevStatus = false;
+            }
           }
-        }
-      );              
-    }
+        );              
+      }
 
     showAlert(header, sub, msg) {
       this.alertCtrl.create({
