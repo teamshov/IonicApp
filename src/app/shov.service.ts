@@ -44,6 +44,7 @@ export class ShovService {
   buildingName: string;
   floorName: string;
   imageName: string;
+  testPos: Vec2;
 
   beacons: {
     [key: string]: Beacon;
@@ -271,7 +272,8 @@ export class ShovService {
 
   test:Test;
   sub:any;
-  runTest(testname : string, rpos : Vec2, numberofreadings: number) {
+  runTest(testname : string,  numberofreadings: number) {
+    let rpos = this.testPos;
     this.test = new Test(testname, rpos, numberofreadings);
 
     this.sub = this.updateStateEvent.subscribe((pos)=>{

@@ -6,6 +6,7 @@ import { Routes, RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 
 import { TestPage } from './test.page';
+import { PosMapModule } from '../posmap/posmap.module';
 
 const routes: Routes = [
   {
@@ -19,6 +20,7 @@ const routes: Routes = [
     CommonModule,
     FormsModule,
     IonicModule,
+    PosMapModule,
     RouterModule.forChild(routes)
   ],
   declarations: [TestPage]

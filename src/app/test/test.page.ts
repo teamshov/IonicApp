@@ -20,7 +20,7 @@ export class TestPage implements OnInit {
   }
 
   begintest() {
-    this.shovService.runTest(this.testname, {x:this.x, y:this.y}, this.n);
+    this.shovService.runTest(this.testname, this.n);
   }
 
 }
