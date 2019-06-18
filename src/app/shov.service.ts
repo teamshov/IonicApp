@@ -272,12 +272,15 @@ export class ShovService {
 
   test:Test;
   sub:any;
-  runTest(testname : string,  numberofreadings: number) {
+  dist:any;
+  runTest(testnm : string,  numberofreadings: number) {
+    let testname = testnm + ";" + JSON.stringify(this.testPos) + ";" + Date.now();
     let rpos = this.testPos;
     this.test = new Test(testname, rpos, numberofreadings);
 
     this.sub = this.updateStateEvent.subscribe((pos)=>{
       if(this.test.n >= this.test.MAXN) {
+        alert("Done!");
         this.sub.unsubscribe();
 
         $.ajaxSetup({
@@ -293,8 +296,8 @@ export class ShovService {
         });
       }
       this.test.n += 1;
-      let dist = Vec2.dist(pos, this.test.realpos);
-      this.test.distances.push(dist);
+      this.dist = Vec2.dist(pos, this.test.realpos);
+      this.test.distances.push(this.dist);
     })
   }
 }
