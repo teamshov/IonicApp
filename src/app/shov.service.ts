@@ -189,10 +189,10 @@ export class ShovService {
   }
 
   success(data) {
-    if (data["status"] == "scanStarted") {
+    if(data["advertisement"] == null) {
+      console.log(data)
       return;
     }
-
     let devdata = this.parseAdvertisingData(this.ble.encodedStringToBytes(data['advertisement']));
     let id = '';
 

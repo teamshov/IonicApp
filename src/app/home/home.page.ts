@@ -30,8 +30,8 @@ export class Home {
           this.showAlert(res.title, res.text, msg);
         });
       });
-      setInterval(this.emergencyNotification.bind(this), 2000);
-      this.backgroundMode.enable();
+      //setInterval(this.emergencyNotification.bind(this), 2000);
+      //this.backgroundMode.enable();
       
     }
 
