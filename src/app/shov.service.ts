@@ -220,6 +220,9 @@ export class ShovService {
     }
   }
 
+  max : number  = 0;
+  maxVal : Vec2 = {x: 0, y: 0};
+
   updateState() {
 
     if(this.updatedBuilding == true) {
@@ -227,8 +230,8 @@ export class ShovService {
       this.updatedBuilding = false;
     }
 
-    let max = 0;
-    let maxVal: Vec2 = {x:0,y:0};
+    this.max = 0;
+    this.maxVal = {x:0,y:0};
 
     for (let x = 0; x < ShovService.gridX; x++) {
       for (let y = 0; y < ShovService.gridY; y++) {
@@ -246,16 +249,16 @@ export class ShovService {
           value += probabilityFunc(gridCell, beaconpos, distance, distance);
 
         }
-        if (value > max) {
-          maxVal.x = x;
-          maxVal.y = y;
-          max = value;
+        if (value > this.max) {
+          this.maxVal.x = x;
+          this.maxVal.y = y;
+          this.max = value;
         }
 
       }
     }
-    this.pos = maxVal;
-    this.updateStateEvent.next(maxVal);
+    this.pos = this.maxVal;
+    this.updateStateEvent.next(this.maxVal);
   }
 
   getBeacons() {
