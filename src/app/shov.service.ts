@@ -37,7 +37,7 @@ export class ShovService {
 
   //Grid size parameters 
   static gridX : number = 40;
-  static gridY : number = 36;
+  static gridY : number = 56;
   static maxDelay : number = 5000;
   updatedBuilding: boolean = false;
   enterBeaconRSSI: string; 
